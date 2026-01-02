@@ -8,8 +8,9 @@
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 *{box-sizing:border-box;font-family:Arial,sans-serif}
 body{margin:0;background:#fff;color:#111}
-header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #eee;padding:16px}
+header{position:sticky;top:0;z-index:10;background:#fff;padding:16px}
 .container{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.rule{max-width:800px;margin:0 auto;border-top:1px solid #eee}
 h1{margin:0;font-size:22px;font-weight:bold;color:#00b3b3}
 .search{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:16px;outline:none;appearance:none;color:#515151}
 .search::placeholder{color:#9a9a9a}
@@ -48,6 +49,7 @@ main{padding:16px}
 </div>
 </div>
 </header>
+<div class="rule"></div>
 <main>
 <div id="jokes" class="feed"></div>
 </main>
