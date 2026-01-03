@@ -1,2 +1,14 @@
 [build]
-  functions = "netlify/functions"
+publish = "."
+
+[[redirects]]
+from = "/admin/*"
+to = "/admin/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "https://jokerepo.netlify.app/*"
+to = "https://jokerepo.com/:splat"
+status = 301
+force = true
