@@ -1,5 +1,5 @@
 /admin/*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com https://identity.netlify.com; connect-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://identity.netlify.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'
 
 /admin/config.yml
   Content-Type: text/yaml; charset=utf-8
