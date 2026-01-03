@@ -1,6 +1,0 @@
-/admin/*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://unpkg.com https://cdn.jsdelivr.net https://www.googletagmanager.com; connect-src 'self' https://identity.netlify.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com; img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self'
-
-/admin/config.yml
-  Content-Type: text/yaml; charset=utf-8
-  Content-Disposition: inline
