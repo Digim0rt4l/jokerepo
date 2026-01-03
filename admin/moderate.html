@@ -11,7 +11,6 @@ input::placeholder{color:#9a9a9a}
 input:focus{border-color:#00b3b3;box-shadow:0 0 0 2px rgba(0,179,179,.25)}
 button{background:#00b3b3;color:#fff;border:none;border-radius:6px;padding:10px 12px;font-size:13px;cursor:pointer}
 button.secondary{background:#fff;color:#00b3b3;border:1px solid #00b3b3}
-button.danger{background:#ff4d4f}
 button:disabled{opacity:.55;cursor:not-allowed}
 main{padding:16px}
 .list{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
@@ -21,9 +20,91 @@ main{padding:16px}
 .actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
 .small{font-size:12px;color:#888}
 .notice{max-width:900px;margin:0 auto;padding:12px;border:1px solid #eee;border-radius:10px;color:#515151}
-.badge{display:inline-flex;gap:6px;align-items:center}
 a{color:#00b3b3;text-decoration:none;font-size:12px}
 a:hover{text-decoration:underline}
-</style></head><body><header><div class="wrap"><h1>Joke Repo — Moderation</h1><div class="row"><button id="loginBtn" class="secondary">Log in</button><button id="logoutBtn" class="secondary" disabled>Log out</button><a href="/admin/" id="cmsLink">Back to CMS</a><a href="/.netlify/functions/admin-list-jokes" id="diagLink" target="_blank" rel="noreferrer">Function check</a></div><div class="row"><input id="q" placeholder="Search jokes (text, id)" disabled><button id="refreshBtn" disabled>Refresh</button></div><div class="row small"><span id="status">Not logged in.</span></div></div></header><main><div id="notice" class="notice">Log in, then press Refresh to load jokes from storage. Search filters by joke text or joke id.</div><div id="list" class="list"></div></main><script>
-const q=document.getElementById("q"),list=document.getElementById("list"),statusEl=document.getElementById("status"),loginBtn=document.getElementById("loginBtn"),logoutBtn=document.getElementById("logoutBtn"),refreshBtn=document.getElementById("refreshBtn"),notice=document.getElementById("notice");let token="",all=[];function setStatus(t){statusEl.textContent=t}function fmt(ts){try{return new Date(ts).toLocaleString()}catch{return""}}function curUser(){return window.netlifyIdentity&&window.netlifyIdentity.currentUser&&window.netlifyIdentity.currentUser()}async function ensureToken(){const u=curUser();if(!u)throw new Error("Not logged in.");return await u.jwt()}async function callFn(path,body){const res=await fetch("/.netlify/functions/"+path,{method:body?"POST":"GET",headers:{"content-type":"application/json","authorization":"Bearer "+token},body:body?JSON.stringify(body):undefined});const txt=await res.text();let data=null;try{data=txt?JSON.parse(txt):null}catch{}if(!res.ok)throw new Error((data&&data.error)||txt||("HTTP_"+res.status));return data}function filter(){const t=(q.value||"").trim().toLowerCase();if(!t)return all;return all.filter(j=>((j.id||"").toLowerCase().includes(t))||((j.text||"").toLowerCase().includes(t)))}function render(){list.innerHTML="";const items=filter();notice.style.display=items.length?"none":"block";for(const j of items){const card=document.createElement("div");card.className="card";const meta=document.createElement("div");meta.className="meta";const left=document.createElement("div");left.innerHTML=`<span class="badge"><strong>ID:</strong><span class="small">${j.id||""}</span></span>`;const right=document.createElement("div");right.textContent=`score ${(j.score||0)} • ${fmt(j.ts||0)}`;meta.append(left,right);const txt=document.createElement("div");txt.className="txt";txt.textContent=j.text||"";const actions=document.createElement("div");actions.className="actions";const del=document.createElement("button");del.className="danger";del.textContent="Delete / Hide";del.addEventListener("click",async e=>{e.stopPropagation();if(!confirm("Hide this joke from the public feed?"))return;del.disabled=true;try{await callFn("admin-delete-joke",{id:j.id});all=all.filter(x=>x.id!==j.id);render();setStatus("Deleted "+j.id)}catch(err){alert(String(err&&err.message||err));del.disabled=false}});actions.append(del);card.append(meta,txt,actions);list.append(card)}if(!items.length)notice.textContent="No matches."}function setUi(){const u=curUser();const logged=!!u;loginBtn.disabled=logged;logoutBtn.disabled=!logged;refreshBtn.disabled=!logged;q.disabled=!logged;notice.textContent=logged?"Press Refresh to load jokes from storage. Search filters by joke text or joke id.":"Log in, then press Refresh to load jokes from storage. Search filters by joke text or joke id.";setStatus(logged?("Logged in as "+(u.email||"")):"Not logged in.")}async function load(){try{setStatus("Loading…");refreshBtn.disabled=true;q.disabled=true;token=await ensureToken();const data=await callFn("admin-list-jokes");all=(data&&data.jokes)||[];setStatus("Loaded "+all.length+" jokes.");render()}catch(err){all=[];list.innerHTML="";notice.style.display="block";const m=String(err&&err.message||err);setStatus(m);notice.textContent=m.includes("environment has not been configured to use Netlify Blobs")?"Your admin function cannot access Netlify Blobs yet. Deploy the updated netlify.toml and updated admin functions, then refresh.":"No data loaded. "+m}finally{refreshBtn.disabled=!curUser();q.disabled=!curUser()}}loginBtn.addEventListener("click",()=>{window.netlifyIdentity&&window.netlifyIdentity.open("login")});logoutBtn.addEventListener("click",()=>{window.netlifyIdentity&&window.netlifyIdentity.logout()});refreshBtn.addEventListener("click",load);q.addEventListener("input",render);if(window.netlifyIdentity){window.netlifyIdentity.init();window.netlifyIdentity.on("init",()=>{setUi();if(curUser())load()});window.netlifyIdentity.on("login",()=>{setUi();load()});window.netlifyIdentity.on("logout",()=>{all=[];list.innerHTML="";setUi()})}setUi();
+</style></head><body><header><div class="wrap"><h1>Joke Repo — Moderation</h1><div class="row"><button id="loginBtn" class="secondary">Log in</button><button id="logoutBtn" class="secondary" disabled>Log out</button><a href="/admin/" id="cmsLink">Back to CMS</a><button id="checkBtn" class="secondary" disabled>Function check</button></div><div class="row"><input id="q" placeholder="Search jokes (text, id)" disabled><button id="refreshBtn" disabled>Refresh</button></div><div class="row small"><span id="status">Not logged in.</span></div></div></header><main><div id="notice" class="notice">Log in, then press Refresh to load jokes from storage. Search filters by joke text or joke id.</div><div id="list" class="list"></div></main><script>
+const q=document.getElementById("q"),list=document.getElementById("list"),statusEl=document.getElementById("status"),loginBtn=document.getElementById("loginBtn"),logoutBtn=document.getElementById("logoutBtn"),refreshBtn=document.getElementById("refreshBtn"),checkBtn=document.getElementById("checkBtn"),notice=document.getElementById("notice");let token="",all=[];
+function setStatus(t){statusEl.textContent=t}
+function fmt(ts){try{return new Date(ts).toLocaleString()}catch{return""}}
+function curUser(){return window.netlifyIdentity&&window.netlifyIdentity.currentUser&&window.netlifyIdentity.currentUser()}
+async function ensureToken(){const u=curUser();if(!u)throw new Error("Not logged in.");return await u.jwt(true)}
+async function callFn(path,body){
+const res=await fetch("/.netlify/functions/"+path,{method:body?"POST":"GET",headers:{"content-type":"application/json","Authorization":"Bearer "+token},body:body?JSON.stringify(body):undefined});
+const txt=await res.text();let data=null;try{data=txt?JSON.parse(txt):null}catch{}
+if(!res.ok)throw new Error((data&&data.error)||txt||("HTTP_"+res.status));
+return data
+}
+function filter(){const t=(q.value||"").trim().toLowerCase();if(!t)return all;return all.filter(j=>((j.id||"").toLowerCase().includes(t))||((j.text||"").toLowerCase().includes(t)))}
+function render(){
+list.innerHTML="";
+const items=filter();
+notice.style.display=items.length?"none":"block";
+for(const j of items){
+const card=document.createElement("div");card.className="card";
+const meta=document.createElement("div");meta.className="meta";
+const left=document.createElement("div");left.innerHTML=`<strong>ID:</strong> <span class="small">${j.id||""}</span>`;
+const right=document.createElement("div");right.textContent=`score ${(j.score||0)} • ${fmt(j.ts||0)}`;
+meta.append(left,right);
+const txt=document.createElement("div");txt.className="txt";txt.textContent=j.text||"";
+const actions=document.createElement("div");actions.className="actions";
+const del=document.createElement("button");del.textContent="Delete / Hide";
+del.addEventListener("click",async e=>{
+e.stopPropagation();
+if(!confirm("Hide this joke from the public feed?"))return;
+del.disabled=true;
+try{await callFn("admin-delete-joke",{id:j.id});all=all.filter(x=>x.id!==j.id);render();setStatus("Deleted "+j.id)}
+catch(err){alert(String(err&&err.message||err));del.disabled=false}
+});
+actions.append(del);
+card.append(meta,txt,actions);
+list.append(card)
+}
+if(!items.length)notice.textContent="No matches."
+}
+function setUi(){
+const u=curUser();const logged=!!u;
+loginBtn.disabled=logged;logoutBtn.disabled=!logged;
+refreshBtn.disabled=!logged;checkBtn.disabled=!logged;q.disabled=!logged;
+notice.textContent=logged?"Press Refresh to load jokes from storage. Search filters by joke text or joke id.":"Log in, then press Refresh to load jokes from storage. Search filters by joke text or joke id.";
+setStatus(logged?("Logged in as "+(u.email||"")):"Not logged in.")
+}
+async function load(){
+try{
+setStatus("Loading…");refreshBtn.disabled=true;q.disabled=true;
+token=await ensureToken();
+const data=await callFn("admin-list-jokes");
+all=(data&&data.jokes)||[];
+setStatus("Loaded "+all.length+" jokes.");
+render()
+}catch(err){
+all=[];list.innerHTML="";notice.style.display="block";
+const m=String(err&&err.message||err);
+setStatus(m);
+notice.textContent=m
+}finally{
+refreshBtn.disabled=!curUser();q.disabled=!curUser()
+}
+}
+async function check(){
+try{
+setStatus("Checking…");
+token=await ensureToken();
+await callFn("admin-list-jokes");
+setStatus("Function check OK (authorized).")
+}catch(err){
+setStatus("Function check failed: "+String(err&&err.message||err))
+}
+}
+loginBtn.addEventListener("click",()=>{window.netlifyIdentity&&window.netlifyIdentity.open("login")});
+logoutBtn.addEventListener("click",()=>{window.netlifyIdentity&&window.netlifyIdentity.logout()});
+refreshBtn.addEventListener("click",load);
+checkBtn.addEventListener("click",check);
+q.addEventListener("input",render);
+if(window.netlifyIdentity){
+window.netlifyIdentity.init();
+window.netlifyIdentity.on("init",()=>{setUi();if(curUser())load()});
+window.netlifyIdentity.on("login",()=>{setUi();load()});
+window.netlifyIdentity.on("logout",()=>{all=[];list.innerHTML="";setUi()})
+}
+setUi();
 </script></body></html>
