@@ -1,0 +1,25 @@
+backend:
+  name: git-gateway
+  branch: main
+
+publish_mode: simple
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "moderation"
+    label: "Moderation"
+    files:
+      - name: "blocked"
+        label: "Blocked Joke IDs"
+        file: "moderation/blocked.json"
+        format: "json"
+        fields:
+          - label: "Blocked IDs"
+            name: "blocked"
+            widget: "list"
+            field:
+              label: "Joke ID"
+              name: "id"
+              widget: "string"
