@@ -1,2 +1,1 @@
-/admin/* /admin/:splat 200
 https://jokerepo.netlify.app/* https://jokerepo.com/:splat 301!
